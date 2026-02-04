@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload - PDF Manipulator{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-lg bg-white rounded-xl shadow-lg border border-slate-100 p-8">
+    <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Upload Document</h1>
+        <p class="text-slate-500 mt-1">Select files to merge, split, or modify.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-5">
+        {% csrf_token %}
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Select PDF Files</label>
+            <div class="flex items-center justify-center w-full">
+                <label for="pdf-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition group">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-8 h-8 mb-3 text-slate-400 group-hover:text-blue-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        
+                        <p class="text-sm text-slate-500 group-hover:text-blue-600 transition"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p class="text-xs text-slate-400 mt-1" id="file-count">No file selected</p>
+                    </div>
+                    <input id="pdf-file" name="pdf_files" type="file" class="hidden" accept=".pdf" multiple required onchange="updateFileName()" />
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <label for="action" class="block text-sm font-medium text-slate-700 mb-2">Action</label>
+            <div class="relative">
+                <select id="action" name="action" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 appearance-none" onchange="toggleOptions()">
+                    <option value="merge">Merge PDFs</option>
+                    <option value="split">Split PDF</option>
+                    <option value="rotate">Rotate PDF</option>
+                    <option value="protect">Password Protect</option>
+                    <option value="scan">Extract Text</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div id="split-options" class="hidden p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Split Mode</label>
+            <select name="split_mode" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg block w-full p-2.5 mb-3">
+                <option value="burst">Burst (Save every page as separate PDF)</option>
+                <option value="range">Extract Page Range</option>
+            </select>
+            <input type="text" name="page_range" placeholder="e.g., 1-5" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg block w-full p-2.5">
+            <p class="text-xs text-slate-400 mt-1">Enter page numbers (start-end) for range mode.</p>
+        </div>
+
+        <div id="rotate-options" class="hidden p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Rotation Angle</label>
+            <div class="flex gap-4">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rotation_angle" value="90" class="text-blue-600 focus:ring-blue-500" checked>
+                    <span class="ml-2 text-sm text-slate-600">90° CW</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rotation_angle" value="180" class="text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-slate-600">180°</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rotation_angle" value="270" class="text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-slate-600">270° CW</span>
+                </label>
+            </div>
+        </div>
+
+        <div id="protect-options" class="hidden p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Set Password</label>
+            <input type="password" name="password" placeholder="Enter password" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg block w-full p-2.5">
+        </div>
+
+        <div id="scan-options" class="hidden p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="text-sm text-blue-800">
+                    Text will be extracted and downloaded as a <strong>.txt</strong> file.
+                </p>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-3 text-center transition shadow-md hover:shadow-lg">
+            Process PDF
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleOptions() {
+        const action = document.getElementById('action').value;
+        
+        // 1. Hide ALL option sections first
+        const sections = ['split-options', 'rotate-options', 'protect-options', 'scan-options'];
+        sections.forEach(id => document.getElementById(id).classList.add('hidden'));
+
+        // 2. Show the specific section based on selection
+        if (action === 'split') document.getElementById('split-options').classList.remove('hidden');
+        if (action === 'rotate') document.getElementById('rotate-options').classList.remove('hidden');
+        if (action === 'protect') document.getElementById('protect-options').classList.remove('hidden');
+        if (action === 'scan') document.getElementById('scan-options').classList.remove('hidden');
+    }
+
+    function updateFileName() {
+        const input = document.getElementById('pdf-file');
+        const output = document.getElementById('file-count');
+        
+        if (input.files.length > 0) {
+            output.textContent = `${input.files.length} file(s) selected`;
+            output.classList.remove('text-slate-400');
+            output.classList.add('text-blue-600', 'font-medium');
+        } else {
+            output.textContent = "No file selected";
+            output.classList.remove('text-blue-600', 'font-medium');
+            output.classList.add('text-slate-400');
+        }
+    }
+</script>
+{% endblock %}

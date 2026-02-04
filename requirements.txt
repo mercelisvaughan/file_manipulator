@@ -1,0 +1,21 @@
+# --- Core Django ---
+Django>=5.0
+
+# --- Production Server ---
+gunicorn              # The WSGI server that runs your app in Docker
+whitenoise[brotli]    # Serves your static files (CSS/Images) efficiently
+
+# --- Database & Storage ---
+dj-database-url       # Automatically configures your DB from Railway's URL
+psycopg2-binary       # The PostgreSQL driver needed for Railway's database
+django-redis          # Allows Django to use your Redis instance
+redis                 # Python client for Redis
+
+# --- Project Specifics ---
+pypdf                 # Your PDF manipulation engine
+python-dotenv         # Loads environment variables from .env (for local dev)
+requests              # Standard library for making API calls
+
+# --- AI & Payments ---
+openai                # For your AI model integration
+squareup              # The official Square Python SDK for payments

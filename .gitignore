@@ -205,3 +205,23 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# --- Node.js & Tailwind (CRITICAL) ---
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# --- Build Artifacts (Don't commit these) ---
+# Django collects static files here for production; we don't want them in Git
+staticfiles/
+# Your Dockerfile builds this, so you don't need to commit the local version
+# (Optional: keep commented out if you prefer to commit your CSS for now)
+# static/css/output.css
+
+# --- macOS System Files ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- VS Code Settings ---
+.vscode/
