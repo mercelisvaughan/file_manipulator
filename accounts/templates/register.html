@@ -8,7 +8,7 @@
                 Create an account
             </h1>
             
-            <form method="post" action="{% url 'signup' %}">
+            <form method="post" action="{% url 'register' %}">
                 {% csrf_token %}
                 
                 <div class="space-y-4 md:space-y-6 [&>p>input]:bg-gray-50 [&>p>input]:border [&>p>input]:border-gray-300 [&>p>input]:text-gray-900 [&>p>input]:rounded-lg [&>p>input]:focus:ring-blue-600 [&>p>input]:focus:border-blue-600 [&>p>input]:block [&>p>input]:w-full [&>p>input]:p-2.5 [&>p>label]:block [&>p>label]:mb-2 [&>p>label]:text-sm [&>p>label]:font-medium [&>p>label]:text-gray-900 [&>p>div]:text-xs [&>p>div]:text-gray-500">
