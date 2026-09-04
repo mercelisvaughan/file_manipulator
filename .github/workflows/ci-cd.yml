@@ -1,0 +1,96 @@
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, feature/pdf-mvp ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ==========================================
+  # STEP 2: CONTINUOUS INTEGRATION (CI)
+  # ==========================================
+  ci-quality-and-security:
+    name: Lint, Audit & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Tooling and Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff bandit pip-audit
+          pip install -r requirements.txt
+
+      # 2a. Linter & Style Check
+      - name: Run Ruff (Code Quality)
+        run: ruff check .
+
+      # 2b. Security Scanners
+      - name: Run Bandit (SAST Security)
+        run: bandit -r core pdf_engine accounts -x tests
+
+      - name: Run pip-audit (Dependency CVEs)
+        run: pip-audit
+
+      # 2c. Automated Test Matrix (ephemeral PostgreSQL service container)
+      - name: Run Test Suite
+        env:
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: 'False'
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+        run: |
+          python manage.py test
+
+  # ==========================================
+  # STEP 3: BUILD & PACKAGE
+  # ==========================================
+  build-and-package:
+    name: Build Multi-Stage Docker Image
+    needs: ci-quality-and-security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Tag deterministically with Git Commit SHA
+      - name: Extract Commit SHA
+        id: vars
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: |
+            file_manipulator:sha-${{ steps.vars.outputs.SHA_SHORT }}
+            file_manipulator:latest
