@@ -9,22 +9,22 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the project files to build CSS
+# Copy project files to build CSS
 COPY . .
 
-# Build the CSS file (adjust path if yours is different)
-# This generates 'static/css/output.css'
+# Build the minified CSS output
 RUN npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify
 
 
 # ==========================================
 # STAGE 2: Python Production Image
 # ==========================================
-FROM python:3.11-slim
+# Use Python 3.12 to satisfy Django 6.1.1 requirements
+FROM python:3.12-slim
 
-# Prevent Python from writing .pyc files & buffer stdout
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Modern ENV syntax (ENV key=value)
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
@@ -37,17 +37,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files from your computer to the container
+# Copy project files into container
 COPY . .
 
-# COPY the compiled CSS from Stage 1 (The "Builder" Stage)
+# Copy compiled CSS from Stage 1
 COPY --from=tailwind-builder /app/static/css/output.css ./static/css/output.css
 
-# Run the collection of static files (WhiteNoise needs this)
-RUN python manage.py collectstatic --noinput
+# Run collectstatic with dummy build-time environment variables
+# WhiteNoise compiles assets here without needing live production secrets
+RUN SECRET_KEY=build-time-insecure-secret-key python manage.py collectstatic --noinput
 
-# Expose the port (Railway uses $PORT, but we document 8000)
+# Expose port (Railway dynamically injects $PORT at runtime)
 EXPOSE 8000
 
-# Start Gunicorn
-CMD gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+# Start Gunicorn via shell execution so $PORT expands dynamically
+CMD ["sh", "-c", "gunicorn core.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
