@@ -1,0 +1,6 @@
+# Exclude auto-generated migrations, virtual environments, and build artifacts
+extend-exclude = [
+    "*/migrations/*",
+    "venv",
+    ".venv",
+]
