@@ -1,7 +1,9 @@
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from django import forms
+from django.contrib.auth.forms import SetPasswordForm, UserChangeForm, UserCreationForm
+from django.contrib.auth.models import User
+
 from .models import Profile
+
 
 class UserInfoForm(forms.ModelForm):
 	phone = forms.CharField(label="", widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Phone'}), required=False)
@@ -17,10 +19,10 @@ class UserInfoForm(forms.ModelForm):
 class ChangePasswordForm(SetPasswordForm):
 	class Meta:
 		model = User
-		fields = ['new_password1', 'new_password2']
+		fields = ('new_password1', 'new_password2')
 
 	def __init__(self, *args, **kwargs):
-		super(ChangePasswordForm, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 		self.fields['new_password1'].widget.attrs['class'] = 'form-control'
 		self.fields['new_password1'].widget.attrs['placeholder'] = 'Password'
@@ -45,7 +47,7 @@ class UpdateUserForm(UserChangeForm):
 		fields = ('username', 'first_name', 'last_name', 'email')
 
 	def __init__(self, *args, **kwargs):
-		super(UpdateUserForm, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 		self.fields['username'].widget.attrs['class'] = 'form-control'
 		self.fields['username'].widget.attrs['placeholder'] = 'User Name'
@@ -62,7 +64,7 @@ class SignUpForm(UserCreationForm):
 		fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
 
 	def __init__(self, *args, **kwargs):
-		super(SignUpForm, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 		self.fields['username'].widget.attrs['class'] = 'form-control'
 		self.fields['username'].widget.attrs['placeholder'] = 'User Name'

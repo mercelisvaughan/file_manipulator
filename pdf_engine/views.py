@@ -1,8 +1,11 @@
-from django.shortcuts import render
-from django.http import HttpResponse, FileResponse
-from .utils import merge_pdfs, split_pdf, rotate_pdf, protect_pdf, extract_text_from_pdf
-import zipfile
 import io
+import zipfile
+
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import render
+
+from .utils import extract_text_from_pdf, merge_pdfs, protect_pdf, rotate_pdf, split_pdf
+
 
 def index(request):
     return render(request, 'index.html')

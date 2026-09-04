@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
-from .forms import SignUpForm, UpdateUserForm, ChangePasswordForm, UserInfoForm
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
-
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.shortcuts import redirect, render
+
+from .forms import ChangePasswordForm, SignUpForm, UpdateUserForm
+
 
 def register_user(request):
 	form = SignUpForm()

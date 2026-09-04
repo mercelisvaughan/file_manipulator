@@ -1,5 +1,7 @@
 import io
+
 from pypdf import PdfReader, PdfWriter
+
 
 def merge_pdfs(files):
     """
